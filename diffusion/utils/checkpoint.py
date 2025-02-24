@@ -9,6 +9,7 @@ def save_checkpoint(work_dir,
                     epoch,
                     model,
                     model_ema=None,
+                    phi=None,
                     optimizer=None,
                     lr_scheduler=None,
                     keep_last=False,
@@ -27,6 +28,8 @@ def save_checkpoint(work_dir,
         file_path = os.path.join(work_dir, f"epoch_{epoch}.pth")
         if step is not None:
             file_path = file_path.split('.pth')[0] + f"_step_{step}.pth"
+    if phi is not None:
+        torch.save(phi.state_dict(), file_path.split('.pth')[0] + f"_phi.pth")
     logger = get_root_logger()
     torch.save(state_dict, file_path)
     logger.info(f'Saved checkpoint of epoch {epoch} to {file_path.format(epoch)}.')
@@ -64,8 +67,8 @@ def load_checkpoint(checkpoint,
     else:
         state_dict = checkpoint.get('state_dict', checkpoint)  # to be compatible with the official checkpoint
 
-    null_embed = torch.load(f'output/pretrained_models/null_embed_diffusers_{max_length}token.pth', map_location='cpu')
-    state_dict['y_embedder.y_embedding'] = null_embed['uncond_prompt_embeds'][0]
+    # null_embed = torch.load(f'output/pretrained_models/null_embed_diffusers_{max_length}token.pth', map_location='cpu')
+    # state_dict['y_embedder.y_embedding'] = null_embed['uncond_prompt_embeds'][0]
 
     missing, unexpect = model.load_state_dict(state_dict, strict=False)
     if model_ema is not None:
